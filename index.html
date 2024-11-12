@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carbon Footprint Calculator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Cooper Black', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5deb3; /* Beige background */
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container {
+            max-width: 700px;
+            width: 100%;
+            padding: 30px;
+            background: rgb(71, 29, 4);
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 {
+            color: #f9fafb;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .input-group {
+            margin: 15px 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #f5f7f9;
+            border-radius: 8px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            border-color: #e6c89b;
+            outline: none;
+        }
+
+        button {
+            background: linear-gradient(90deg, #382502, #e6c89b);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 30px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1em;
+            transition: background 0.3s, transform 0.2s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            background: linear-gradient(90deg, #684502, #e6c89b);
+            transform: scale(1.05);
+        }
+
+        #result {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 1.2em;
+            color: #c2c2c2;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Chart Styles */
+        #pieChart {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 400px;
+            height: 400px;
+            display: none; /* Hide initially */
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Carbon Footprint Calculator</h1>
+        <div id="registeration" class="input-group">
+        <form id="user-form" action="myservlet" method="post">
+
+                <input type="hidden" name="action" value="register">
+            
+                <label for="userName">Name:</label>
+                <input type="text" id="userName" name="userName" required>
+
+                <label for="phoneNumber">Phone Number:</label>
+                <input type="tel" id="phoneNumber" name="phoneNumber" required>
+            
+                <label for="userCity">City:</label>
+                <input type="text" id="userCity" name="userCity" required>
+            
+            <button id="registeration" type="submit" onclick="handleRegister(event)">Register</button>
+
+        </form>
+    </div>
+    
+        <div id="puc" class="hidden" onchange="toggle()">
+            <h2>Do You Have Updated PUC?</h2>
+            <select id="puc-check">
+                <option value="default">--Select One Option--</option>
+                <option value="Y">Yes</option>
+                <option value="N">No</option>
+            </select>
+        
+        </div>
+
+        <div id="transportation-section" class="hidden">
+
+            <div id="puc-not-found" class="hidden">
+                <h1>Please get PUC!!!</h1>
+            </div>
+
+            <h2 id="tmode" class="hidden">Transportation Mode <span id="mode"></span></h2>
+            
+                <div class="input-group">
+                    <label for="transportType" id="select" class="">Select Transport Type:</label>
+                    <select id="transportType" onchange="toggleTransportInputs()" class="">
+                        <option value="null">--Select One Option--</option>
+                        <option value="private">Private Transport</option>
+                        <option value="public">Public Transport</option>
+                        <option value="hybrid">Hybrid Transport</option>
+                    </select>
+                </div>
+                
+                <div id="privateTransport" class="input-group hidden">
+                    <form id="private-form" action="myservlet" method="post">
+
+                    <input type="hidden" name="action" value="pvt">
+
+                    <label for="cycle">Distance by Cycle (km):</label>
+                    <input type="number" id="cycle" min="0" name="cycle">
+                    
+                    <label for="car">Distance by Car (km):</label>
+                    <input type="number" id="car" min="0" name="car">
+                    
+                    <label for="motorcycle">Distance by Motorcycle (km):</label>
+                    <input type="number" id="motorcycle" min="0" name="bike">
+                    
+                    <label for="truck">Distance by Truck (km):</label>
+                    <input type="number" id="truck" min="0" name="truck">
+                    
+                    <label for="electric">Distance by Electric Vehicle (km):</label>
+                    <input type="number" id="electric" min="0" name="ev">
+
+                    <button id="calculate" type="submit" onclick="showCarbonfootprint()">Calculate Carbon Footprint</button>
+
+                </form>
+                </div>
+
+                <div id="publicTransport" class="input-group hidden">
+                    <form id="public-form" action="myservlet" method="post">
+
+                    <input type="hidden" name="action" value="pub">
+                    
+                    <label for="bus">Distance by Bus (km):</label>
+                    <input type="number" id="bus" min="0" name="bus">
+                    
+                    <label for="auto">Distance by Auto (km):</label>
+                    <input type="number" id="auto" min="0" name="auto">
+                    
+                    <label for="train">Distance by Train (km):</label>
+                    <input type="number" id="train" min="0" name="train">
+
+                    <button id="calculate" type="submit" onclick="showCarbonfootprint()">Calculate Carbon Footprint</button>
+
+                </form>
+                </div>
+
+                <div id="hybridTransport" class="input-group hidden">
+                    <form id="hybrid-form" action="myservlet" method="post">
+
+                    <input type="hidden" name="action" value="hyb">
+
+                    <label for="cycleHybrid">Distance by Cycle (km):</label>
+                    <input type="number" id="cycleHybrid" min="0" name="cycleHybrid">
+
+                    <label for="carHybrid">Distance by Car (km):</label>
+                    <input type="number" id="carHybrid" min="0" name="carHybrid">
+
+                    <label for="motorcycleHybrid">Distance by Motorcycle (km):</label>
+                    <input type="number" id="motorcycleHybrid" min="0" name="motorcycleHybrid">
+
+                    <label for="truckHybrid">Distance by Truck (km):</label>
+                    <input type="number" id="truckHybrid" min="0" name="truckHybrid">
+
+                    <label for="busHybrid">Distance by Bus (km):</label>
+                    <input type="number" id="busHybrid" min="0" name="busHybrid">
+
+                    <label for="autoHybrid">Distance by Auto (km):</label>
+                    <input type="number" id="autoHybrid" min="0" name="autoHybrid">
+
+                    <label for="trainHybrid">Distance by Train (km):</label>
+                    <input type="number" id="trainHybrid" min="0" name="trainHybrid">
+
+                    <button id="calculate" type="submit" onclick="showCarbonfootprint()">Calculate Carbon Footprint</button>
+
+                </form>
+                </div>
+            
+
+            <div id="result" class="hidden">
+                <p>Your total carbon footprint is: <span id="carbonOutput"></span></p>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+
+
+        function toggle(){
+
+            const transportType = document.getElementById('transportType').value;
+
+            if(document.getElementById("puc-check").value == "Y" && transportType == "private"){
+                
+                
+                document.getElementById("tmode").classList.remove('hidden');
+                document.getElementById("mode").innerText = " : Private";
+                document.getElementById('privateTransport').classList.remove('hidden');
+                document.getElementById('puc').classList.add('hidden');
+                document.getElementById('transportType').classList.add('hidden');
+                document.getElementById('puc-not-found').classList.add('hidden');
+            }
+            else if(document.getElementById("puc-check").value == "Y" && transportType == "hybrid"){
+
+                document.getElementById("tmode").classList.remove('hidden');
+                document.getElementById("mode").innerText = " : Hybrid";
+                document.getElementById('hybridTransport').classList.remove('hidden');
+                document.getElementById('puc').classList.add('hidden');
+                document.getElementById('transportType').classList.add('hidden');
+                document.getElementById('puc-not-found').classList.add('hidden');
+            }
+            else{
+
+                document.getElementById("puc-not-found").classList.remove('hidden');
+
+            }
+
+        }
+        function handleRegister(event) {
+
+            event.preventDefault(); // Prevent the default submission
+        
+            // Hide the register button, show transportation section
+            document.getElementById("registeration").classList.add('hidden');
+            document.getElementById("transportation-section").classList.remove('hidden');
+        
+            // Collect form data
+            const formData = new FormData(document.getElementById("user-form"));
+        
+            // Validate input fields
+            const userName = formData.get("userName");
+            const phoneNumber = formData.get("phoneNumber");
+            const userCity = formData.get("userCity");
+        
+            if (!userName || !phoneNumber || !userCity) {
+                alert("All fields are required!");
+                return; // Stop submission if validation fails
+            }
+        
+            console.log("Form data validated. Submitting via AJAX...");
+        
+            // Perform AJAX request
+            fetch("http://localhost:8080/carbonfootprintcalculator/myservlet", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log("Form submitted successfully");
+                    // Run additional JS logic after successful submission
+                } else {
+                    throw new Error("Form submission failed");
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("An error occurred during form submission.");
+            });
+        }
+        
+
+
+        function toggleTransportInputs() {
+
+            const transportType = document.getElementById('transportType').value;
+
+            if(transportType == "private" || transportType == "hybrid"){
+
+                document.getElementById('select').classList.add('hidden');
+                document.getElementById('transportType').classList.add('hidden');
+                document.getElementById('puc').classList.remove('hidden');
+
+            }
+            else if(transportType == "public"){
+                
+                document.getElementById("tmode").classList.remove('hidden');
+                document.getElementById("mode").innerText = " : Public";
+                document.getElementById("publicTransport").classList.remove('hidden');
+                document.getElementById('transportType').classList.add('hidden');
+            }
+            else{
+                
+                console.log("");
+
+            }
+        }
+
+        function showCarbonfootprint(){
+
+            document.getElementById('result').classList.remove('hidden');
+
+                // Use Fetch API to get the updated content from the servlet
+                fetch('myservlet')
+                    .then(response => response.text())
+                    .then(data => {
+                        // Update the content of the span element
+                        document.getElementById('carbonOutput').innerText = data;
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+    
+    </script>
+</body>
+</html>
